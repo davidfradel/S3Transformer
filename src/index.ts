@@ -88,24 +88,23 @@ export async function processCsvFile(filePath: string, segmentMappings: Record<n
 
 function createCsvFile(data: any[], filePath: string): Promise<void> {
     return new Promise((resolve, reject) => {
-        const csvStream = format({ headers: true });
         const writableStream = fs.createWriteStream(filePath);
 
         writableStream.on('finish', resolve);
         writableStream.on('error', reject);
 
-        csvStream.pipe(writableStream);
+        // Write the CSV headers
+        writableStream.write('url,segments\n');
 
         data.forEach(row => {
-            // Convert each row to the expected format
-            const csvRow: any = { url: row.url };
-            row.segments.forEach((segment: string, index: number) => {
-                csvRow[`segment${index + 1}`] = segment;
-            });
-            csvStream.write(csvRow);
+            // Build the CSV line with the URL and the segments
+            const segmentsString = row.segments.join(',');
+            const csvLine = `${row.url},${segmentsString}\n`;
+
+            writableStream.write(csvLine);
         });
 
-        csvStream.end();
+        writableStream.end();
     });
 }
 
